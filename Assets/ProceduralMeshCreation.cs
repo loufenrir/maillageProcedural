@@ -13,6 +13,7 @@ public class ProceduralMeshCreation : MonoBehaviour
     private Vector3[] p_vertices;
     private int[] p_triangles;
     private Vector3[] p_normals;
+    public float width = 1.0f; /*ici derniere variable ajoute*/
     private void DebugNormals()
     {
         for (int num_vert = 0; num_vert < p_vertices.Length; num_vert++)
@@ -30,38 +31,74 @@ public class ProceduralMeshCreation : MonoBehaviour
 
         p_mesh = new Mesh();
 
-        p_vertices = new Vector3[7];
-        p_vertices[0] = new Vector3(0, 0, 0);
-        p_vertices[1] = new Vector3(0, 1, 0);
-        p_vertices[2] = new Vector3(1, 1, 0);
-        p_vertices[3] = new Vector3(1, 0, 0);
-        p_vertices[4] = new Vector3(0, 1, 1);
-        p_vertices[5] = p_vertices[1];
-        p_vertices[6] = p_vertices[2];
+        p_mesh.name = "MyProceduralCube";
 
+        float w = -width / 2.0f;
+        float W = width / 2.0f;
 
+        Vector3 p0 = new Vector3(w, w, w);
+        Vector3 p1 = new Vector3(w, W, w);
+        Vector3 p2 = new Vector3(W, W, w);
+        Vector3 p3 = new Vector3(W, w, w);
 
-        p_triangles = new int[]
+        Vector3 p4 = new Vector3(w, w, W);
+        Vector3 p5 = new Vector3(w, W, W);
+        Vector3 p6 = new Vector3(W, W, W);
+        Vector3 p7 = new Vector3(W, w, W);
+
+        //p_vertices = new Vector3[7];
+        //p_vertices[0] = new Vector3(0, 0, 0);
+        //p_vertices[1] = new Vector3(0, 1, 0);
+        //p_vertices[2] = new Vector3(1, 1, 0);
+        //p_vertices[3] = new Vector3(1, 0, 0);
+        //p_vertices[4] = new Vector3(0, 1, 1);
+        //p_vertices[5] = p_vertices[1];
+        //p_vertices[6] = p_vertices[2];
+
+        p_vertices = new Vector3[]
         {
-            0, 1, 2 ,
-            0, 2, 3,
-            5, 4, 6,
+            p0,p1,p2,p3, // devant
+            p4,p5,p1,p0, // gauche
+            p3,p2,p6,p7, // Droite
+            p7,p6,p5,p4, // Derrière
+            p1,p5,p6,p2, // Dessus
+            p4,p0,p3,p7 // dessous
         };
+
+        p_triangles = new int[12 * 3];
+
+        int index = 0;
+
+        for (int i = 0; i < 6; i++)
+        {
+            // Triangle 1 de la face
+            p_triangles[index++] = i * 4;
+            p_triangles[index++] = i * 4 + 1;
+            p_triangles[index++] = i * 4 + 3;
+
+            // Triangle 2 de la face
+            p_triangles[index++] = i * 4 + 1;
+            p_triangles[index++] = i * 4 + 2;
+            p_triangles[index++] = i * 4 + 3;
+        }
 
         p_normals = new Vector3[p_vertices.Length];
 
-        Vector3 V1 = p_vertices[p_triangles[1]] - p_vertices[p_triangles[0]];
-        Vector3 V2 = p_vertices[p_triangles[2]] - p_vertices[p_triangles[0]];
+        Vector3 v1, v2, pv;
 
-        Vector3 N = Vector3.Cross(V1, V2).normalized;
+        for (int i = 0; i < 6; i++)
+        {
+            v1 = p_vertices[i * 4 + 1] - p_vertices[i * 4 + 0];
+            v2 = p_vertices[i * 4 + 2] - p_vertices[i * 4 + 0];
 
-        p_normals[p_triangles[0]] = N;
-        p_normals[p_triangles[1]] = N;
-        p_normals[p_triangles[2]] = N;
-        p_normals[3] = N;
-        p_normals[4] = new Vector3(0, 1, 0);
-        p_normals[5] = new Vector3(0, 1, 0);
-        p_normals[6] = new Vector3(0, 1, 0);
+            pv = Vector3.Cross(v1, v2);
+            pv = pv / pv.magnitude;
+
+            p_normals[i * 4 + 0] = pv;
+            p_normals[i * 4 + 1] = pv;
+            p_normals[i * 4 + 2] = pv;
+            p_normals[i * 4 + 3] = pv;
+        }
 
         p_mesh.Clear();
 
