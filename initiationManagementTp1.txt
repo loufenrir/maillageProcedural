@@ -1,0 +1,94 @@
+Test / Questions de cours :
+
+Quels sont les 6 tableaux de la classe mesh ? 
+Les 6 tableaux sont
+- vertices
+- triangles
+- normals
+- uv
+- colors
+- tangents
+
+La taille du tableau triangles est un multiple de 3 ?
+Oui. la taille du triangle est toujours un multiple de 3.
+On a 6 valeurs, 2 triangle de 3 valeurs.
+Donc la taille du tableau triangle est bien multiple de 3.
+
+La taille du tableau triangles est inférieure à celle du tableau vertices ?
+Non car comme on peut le voir quand on met res = 1
+On a :
+24 vertices, 12 triangles, surface : 6;
+On a donc 24 plus petit que 36.
+12 triangles qui ont chaqun 3 valeurs = 36 valeurs
+Donc non la taille du tableau n'est pas toujours inferieure à celle du tableau de vertices.
+
+La taille du tableau triangles est exactement égale au 1/3 de la taille du tableau vertices ?
+Le tableau triangle contient 3 Valeur par triangle.
+Vertice lui contient les sommets du maillage.
+Si on reprend l''exemple de tout à l'heure, on a pour res = 1 :
+24 vertices, 12 triangles, surface : 6;
+On a toujours 36 pour la taille du tableau triangle.
+24 / 3 = 8
+Donc pas égal au tier du tableau de vertices.
+
+Qu’est-ce qu’un sommet/vertice partagé ? 
+C''est un vertex utilize par plusieurs triangles.
+
+Un vertex peut-il être partagé sur plus de 3 triangles ?
+Oui.
+
+Avantage et inconvénient d’un sommet partagé ? 
+Avantage : Ça économise le nombre de vertives à stocker.
+Inconvénient :Il peut être contrainte par les autres face.
+
+Il existe un tableau qui stocke la normale de chaque triangle ?
+Non, il y a un tableau qui stocke une normale pour chaque vertex.
+Dans le tp on l''a appelé normal.
+
+Il existe en plus du tableaux triangles un autre tableau qui permet de stocker des quad(rilatères) ?
+Dans ce que l''on a fait, non il n'y a pas de tableau qui permet de stocker des quadrillatères.
+On a utilizer un tableau de triangle pour le maillage.
+
+Suis-je obligé de modéliser uniquement avec des triangles avec mon modeleur 3D pour pourvoir importer mon
+maillage d’objet3D dans Unity ?
+Non, on aurais pu modéliser avec d''autres types de faces.
+
+Quelle est la taille du tableau uv ? 
+La taille du tableau uv correspond a celle du tableau de vertices. 
+Chacun des différents vertex possède bien des coordonees uv.
+
+La taille du tableau Normals devrait être identique à la taille du tableau Vertices.
+Un vertex est associé a une normale donc taille identique.
+
+Soit mesh.triangles= {0,1,2,10,14,9,1,2,9} :
+Combien y a-t-il de triangles ?
+Il y a 9 valeurs donc 3 triangles.
+
+Le tableau de triangles suivant est ils équivalent ? {0,1,2,10,14,9,9,2,1} 
+Oui le tableau suivant est equivalent.
+Le sens dans le quel ont se déplace dans le triangle reste le même.
+C'est le point de départ du triangle qui change.
+Comme c''est dans le meme pack de valeur, il n'y a pas de changement d'orientation du triangle.
+
+Le tableau de triangles suivant est ils équivalent ? {0,1,2,10,14,9,9,2,1} 
+Non, le tableau n'est pas equivalent.
+L'ordre du sommet de l'un des triangles est inverse donc l'orientation change.
+
+Donner un autre tableau équivalent ?
+{1,2,0,14,9,10,2,9,1}
+
+Donner un autre tableau non équivalent (avec les mêmes sommets évidemment)
+{1,2,0,14,10,9,2,1,9}
+
+Ce tableau mesh.triangles= {0,1,2,7,8} peut-il être utilisé dans un maillage ?
+Non il manque une Valeur.
+
+Est-il possible de modifier directement les tableaux de l’objet de class Mesh d’un objet 3D pour modifier son
+maillage ? 
+Oui on peut modifier le maillage en modifiant tableau de l'objet de la class Mesh (donc tableau : vertices, triangle, normals).
+
+Lorsque le maillage a été modifié, quand est-il judicieux de mettre à jour le collider et comment le faire ?
+Si on change les vertices ou si l'on recree le mesh.
+
+
+

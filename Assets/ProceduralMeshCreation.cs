@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 
@@ -13,7 +12,19 @@ public class ProceduralMeshCreation : MonoBehaviour
     private Vector3[] p_vertices;
     private int[] p_triangles;
     private Vector3[] p_normals;
-    public float width = 1.0f; /*ici derniere variable ajoute*/
+    public float width = 1.0f;
+
+    //Variable ajoute pour la partie C
+    public ushort res = 1;
+
+    private ushort nb_vertices_par_face;
+    private ushort nb_vertices;
+    private ushort nb_triangles_par_face;
+    private ushort nb_triangles;
+
+    private int indexTriangle;
+
+
     private void DebugNormals()
     {
         for (int num_vert = 0; num_vert < p_vertices.Length; num_vert++)
@@ -25,89 +36,13 @@ public class ProceduralMeshCreation : MonoBehaviour
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    //Nouveau start partie C sans ancien start construction ancien cube
     void Start()
     {
+        CreerCubeMultiRes();
 
-
-        p_mesh = new Mesh();
-
-        p_mesh.name = "MyProceduralCube";
-
-        float w = -width / 2.0f;
-        float W = width / 2.0f;
-
-        Vector3 p0 = new Vector3(w, w, w);
-        Vector3 p1 = new Vector3(w, W, w);
-        Vector3 p2 = new Vector3(W, W, w);
-        Vector3 p3 = new Vector3(W, w, w);
-
-        Vector3 p4 = new Vector3(w, w, W);
-        Vector3 p5 = new Vector3(w, W, W);
-        Vector3 p6 = new Vector3(W, W, W);
-        Vector3 p7 = new Vector3(W, w, W);
-
-        //p_vertices = new Vector3[7];
-        //p_vertices[0] = new Vector3(0, 0, 0);
-        //p_vertices[1] = new Vector3(0, 1, 0);
-        //p_vertices[2] = new Vector3(1, 1, 0);
-        //p_vertices[3] = new Vector3(1, 0, 0);
-        //p_vertices[4] = new Vector3(0, 1, 1);
-        //p_vertices[5] = p_vertices[1];
-        //p_vertices[6] = p_vertices[2];
-
-        p_vertices = new Vector3[]
-        {
-            p0,p1,p2,p3, // devant
-            p4,p5,p1,p0, // gauche
-            p3,p2,p6,p7, // Droite
-            p7,p6,p5,p4, // Derrière
-            p1,p5,p6,p2, // Dessus
-            p4,p0,p3,p7 // dessous
-        };
-
-        p_triangles = new int[12 * 3];
-
-        int index = 0;
-
-        for (int i = 0; i < 6; i++)
-        {
-            // Triangle 1 de la face
-            p_triangles[index++] = i * 4;
-            p_triangles[index++] = i * 4 + 1;
-            p_triangles[index++] = i * 4 + 3;
-
-            // Triangle 2 de la face
-            p_triangles[index++] = i * 4 + 1;
-            p_triangles[index++] = i * 4 + 2;
-            p_triangles[index++] = i * 4 + 3;
-        }
-
-        p_normals = new Vector3[p_vertices.Length];
-
-        Vector3 v1, v2, pv;
-
-        for (int i = 0; i < 6; i++)
-        {
-            v1 = p_vertices[i * 4 + 1] - p_vertices[i * 4 + 0];
-            v2 = p_vertices[i * 4 + 2] - p_vertices[i * 4 + 0];
-
-            pv = Vector3.Cross(v1, v2);
-            pv = pv / pv.magnitude;
-
-            p_normals[i * 4 + 0] = pv;
-            p_normals[i * 4 + 1] = pv;
-            p_normals[i * 4 + 2] = pv;
-            p_normals[i * 4 + 3] = pv;
-        }
-
-        p_mesh.Clear();
-
-        p_mesh.vertices = p_vertices;
-        p_mesh.triangles = p_triangles;
-        p_mesh.normals = p_normals;
         p_mesh.RecalculateBounds();
 
-        GetComponent<MeshFilter>().mesh = p_mesh;
         GetComponent<MeshCollider>().sharedMesh = null;
         GetComponent<MeshCollider>().sharedMesh = p_mesh;
 
@@ -121,7 +56,137 @@ public class ProceduralMeshCreation : MonoBehaviour
             (p_triangles.Length / 3) + " triangles, surface : " +
             surface
         );
+    }
+    //methode partie C
+    private void CreerCubeMultiRes()
+    {
+        long nb_vertices_par_face_théoriques = (res + 1) * (res + 1);
+        long nb_vertices_théoriques = nb_vertices_par_face_théoriques * 6;
 
+        if (nb_vertices_théoriques >= ushort.MaxValue)
+        {
+            print("trop de vertices pour type d'indices ushort par defaut");
+            print("max possible " + ushort.MaxValue + " demandé = " + nb_vertices_théoriques);
+
+            print(
+                "il faudrait modifier le type des indices avec " +
+                "mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;"
+            );
+
+            return;
+        }
+
+        nb_triangles_par_face = (ushort)(2 * res * res);
+        nb_vertices_par_face = (ushort)nb_vertices_par_face_théoriques;
+        nb_vertices = (ushort)nb_vertices_théoriques;
+        nb_triangles = (ushort)(nb_triangles_par_face * 6);
+
+        p_mesh = new Mesh();
+        p_mesh.name = "MyProceduralCubeMultiRes";
+
+        p_vertices = new Vector3[nb_vertices];
+        p_normals = new Vector3[nb_vertices];
+        p_triangles = new int[nb_triangles * 3];
+
+        //6 faces du cube
+        indexTriangle = 0;
+
+        construireFace(0, Vector3.right, Vector3.up, Vector3.back);
+        construireFace(1, Vector3.left, Vector3.up, Vector3.forward);
+        construireFace(2, Vector3.forward, Vector3.up, Vector3.right);
+        construireFace(3, Vector3.back, Vector3.up, Vector3.left);
+        construireFace(4, Vector3.right, Vector3.forward, Vector3.up);
+        construireFace(5, Vector3.left, Vector3.forward, Vector3.down);
+
+        //calcul des normales
+        for (int num_face = 0; num_face < 6; num_face++)
+        {
+            Vector3 normalFaceEnCours =
+                normaleDuTriangle(nb_triangles_par_face * num_face);
+
+            for (int i = 0; i <= res; i++)
+            {
+                for (int j = 0; j <= res; j++)
+                {
+                    p_normals[
+                        num_face * nb_vertices_par_face
+                        + i * (res + 1)
+                        + j
+                    ] = normalFaceEnCours;
+                }
+            }
+        }
+
+        
+
+        p_mesh.Clear();
+
+        p_mesh.vertices = p_vertices;
+        p_mesh.triangles = p_triangles;
+        p_mesh.normals = p_normals;
+
+        GetComponent<MeshFilter>().mesh = p_mesh;
+    }
+
+    //suite partie C
+    private Vector3 normaleDuTriangle(int numTriangle)
+    {
+        int index = numTriangle * 3;
+
+        Vector3 a = p_vertices[p_triangles[index]];
+        Vector3 b = p_vertices[p_triangles[index + 1]];
+        Vector3 c = p_vertices[p_triangles[index + 2]];
+
+        Vector3 v1 = b - a;
+        Vector3 v2 = c - a;
+
+        return Vector3.Cross(v1, v2).normalized;
+    }
+
+    //Suite partie C
+    private void construireFace(
+    int numero_face,
+    Vector3 axeDroit,
+    Vector3 axeHaut,
+    Vector3 axeProfondeur)
+    {
+        float decal = width / 2f;
+
+        for (int i = 0; i <= res; i++)
+        {
+            for (int j = 0; j <= res; j++)
+            {
+                p_vertices[
+                    numero_face * nb_vertices_par_face
+                    + i * (res + 1)
+                    + j
+                ] =
+                    axeHaut * (-decal + (float)i / res * width)
+                    + axeDroit * (-decal + (float)j / res * width)
+                    + axeProfondeur * decal;
+            }
+        }
+
+        int num_vertex;
+
+        for (int i = 0; i < res; i++)
+        {
+            for (int j = 0; j < res; j++)
+            {
+                num_vertex =
+                    numero_face * nb_vertices_par_face
+                    + i * (res + 1)
+                    + j;
+
+                p_triangles[indexTriangle++] = num_vertex;
+                p_triangles[indexTriangle++] = num_vertex + res + 1;
+                p_triangles[indexTriangle++] = num_vertex + 1;
+
+                p_triangles[indexTriangle++] = num_vertex + res + 1;
+                p_triangles[indexTriangle++] = num_vertex + res + 2;
+                p_triangles[indexTriangle++] = num_vertex + 1;
+            }
+        }
     }
 
     private void DebugAllNormals(bool affN_Orientation, bool affN_Eclairage, bool affN_vertices)

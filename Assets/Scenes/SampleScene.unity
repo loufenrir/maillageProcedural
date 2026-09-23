@@ -569,6 +569,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProceduralMeshCreation
   width: 1
+  res: 1
 --- !u!4 &1912163820
 Transform:
   m_ObjectHideFlags: 0
